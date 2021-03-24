@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+import org.springframework.hateoas.Link;
+import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -30,27 +32,41 @@ public class UserController {
 	}
 
 	@GetMapping("/{id}")
-	public Optional<User> fetchItemById(@PathVariable long id) {
-		return userRepository.findById(id);
+	public User fetchUserById(@PathVariable long id) {
+
+		Optional<User> result = userRepository.findById(id);
+		User user = result.get();
+
+		Link self = WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(UserController.class).fetchUserById(user.getId())).withSelfRel();
+		Link addFav = WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(UserController.class).fetchUserFavorites(id))
+				.withRel("addUserFavorite");
+		user.add(self, addFav);
+
+		return user;
 	}
 
 	@PostMapping("/new")
-	public User createNewItem(@RequestBody User user) {
-		return userRepository.save(user);
+	public User createNewUser(@RequestBody User offer) {
+		User user = userRepository.save(offer);
+
+		Link self = WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(UserController.class).fetchUserById(user.getId())).withSelfRel();
+		Link userFav = WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(UserController.class).fetchUserFavorites(user.getId()))
+				.withRel("fetchUserFavorites");
+		Link addUserFav =
+				WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(UserController.class).addUserFavorite(user.getId(), null))
+				.withRel("addUserFavorite");
+
+		user.add(self, userFav, addUserFav);
+		return user;
 	}
 
 	@GetMapping("/{id}/favorites")
 	public Set<Item> fetchUserFavorites(@PathVariable long id) {
 		Optional<User> user = userRepository.findById(id);
 
-		if(user.isPresent()) {
-			return user.get().getFavorites();
-		} else {
-			return Collections.emptySet();
-		}
-//		return user.isPresent()
-//				? user.get().getFavorites()
-//				: Collections.emptySet();
+		return user.isPresent()
+				? user.get().getFavorites()
+				: Collections.emptySet();
 	}
 
 	@PostMapping("/{id}/favorites/add")
