@@ -7,6 +7,7 @@ import java.util.Set;
 
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -39,7 +40,8 @@ public class UserController {
 
 		Link self = WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(UserController.class).fetchUserById(user.getId())).withSelfRel();
 		Link addFav = WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(UserController.class).fetchUserFavorites(id))
-				.withRel("addUserFavorite");
+				.withRel("addUserFavorite")
+				.withHref("post");
 		user.add(self, addFav);
 
 		return user;
@@ -51,10 +53,12 @@ public class UserController {
 
 		Link self = WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(UserController.class).fetchUserById(user.getId())).withSelfRel();
 		Link userFav = WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(UserController.class).fetchUserFavorites(user.getId()))
-				.withRel("fetchUserFavorites");
+				.withRel("fetchUserFavorites")
+				.withHref("get");
 		Link addUserFav =
 				WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(UserController.class).addUserFavorite(user.getId(), null))
-				.withRel("addUserFavorite");
+				.withRel("addUserFavorite")
+				.withHref("post");
 
 		user.add(self, userFav, addUserFav);
 		return user;
